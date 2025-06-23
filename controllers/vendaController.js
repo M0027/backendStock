@@ -9,7 +9,7 @@ const criarVenda = async (req, res) => {
     res.status(201).json({ message: 'Venda criada com sucesso', venda: novaVenda });
   } catch (error) {
     res.status(400).json({ error: error.message });
-    res.status(409).json({ message:'Stock insuficiente' });
+    // res.status(409).json({ message:'Stock insuficiente' });
   }
 };
 

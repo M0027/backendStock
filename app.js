@@ -30,6 +30,7 @@ app.use('/api/admin/loja/', adminRoutes);
 
 
 
+
 // Middleware de erro (deve ser o último)
 app.use(errorMiddleware);
 

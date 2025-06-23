@@ -5,8 +5,8 @@ class Produto {
   static async criar(nome, categoria_id, preco_compra, preco_venda, stock, loja_id) {
     try {
       // Verificar se a categoria existe e pertence à loja
-      const [categorias] = await pool.query(
-        `SELECT id FROM categorias WHERE id = ? AND loja_id = ?`,
+      const {rows: categorias} = await pool.query(
+        `SELECT id FROM categorias WHERE id = $1 AND loja_id = $2`,
         [categoria_id, loja_id]
       );
 
@@ -15,13 +15,13 @@ class Produto {
       }
 
       // Inserir o produto
-      const [result] = await pool.query(
+      const categoria = await pool.query(
         `INSERT INTO produtos (nome, categoria_id, preco_compra, preco_venda, stock, loja_id)
-       VALUES (?, ?, ?, ?, ?,?)`,
+       VALUES ($1, $2, $3, $4, $5,$6)`,
         [nome, categoria_id, preco_compra, preco_venda, stock, loja_id]
       );
 
-      return result.insertId;
+      return categoria.insertId;
     } catch (err) {
       throw new Error(`Erro ao criar produto: ${err.message}`);
     }
@@ -31,7 +31,7 @@ class Produto {
   // Remove um produto por ID
   static async deletar(id, loja_id) {
     try {
-      const [result] = await pool.query('DELETE FROM produtos WHERE id = ? AND loja_id = ?', [id, loja_id]);
+      const {rows:result} = await pool.query('DELETE FROM produtos WHERE id = $1 AND loja_id = $2', [id, loja_id]);
 
       if (result.affectedRows === 0) {
         throw new Error('Produto não encontrado.');
@@ -46,25 +46,14 @@ class Produto {
 
   static async atualizarEstoqueEPreco(id, loja_id, novoStock, novoPrecoCompra) {
 
-    console.log({
-      novoStock,
-      tipo1: typeof novoStock,
-      novoPrecoCompra,
-      tipo2: typeof novoPrecoCompra,
-      id,
-      tipo3: typeof id,
-      loja_id,
-      tipo4: typeof loja_id
-    });
-
 
 
 
     try {
-      const [result] = await pool.query(
+      const {rows:result}= await pool.query(
         `UPDATE produtos 
-       SET stock = ?, preco_compra = ?
-       WHERE id = ? AND loja_id = ?`,
+       SET stock = $1, preco_compra = $2
+       WHERE id = $3 AND loja_id = $4`,
         [novoStock, novoPrecoCompra, id, loja_id]
       );
 
@@ -80,11 +69,11 @@ class Produto {
   // Lista todos os produtos com nome da categoria
   static async listar(loja_id) {
     try {
-      const [rows] = await pool.query(`
+      const {rows:rows} = await pool.query(`
   SELECT p.*, c.nome AS categoria_nome 
   FROM produtos p
   JOIN categorias c ON p.categoria_id = c.id
-  WHERE p.loja_id = ? AND c.loja_id = ?
+  WHERE p.loja_id = $1 AND c.loja_id = $2
 `, [loja_id, loja_id]);
 
       return rows;

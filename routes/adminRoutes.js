@@ -33,14 +33,15 @@ function verificarAdmin(req, res, next) {
 // Rota para listar lojas
 router.get('/', verificarAdmin, async (req, res) => {
   try {
-    const [lojas] = await db.query('SELECT id, nome_loja, email, data_cadastro, status_pagamento FROM lojas');
+    const { rows: lojas } = await db.query('SELECT id, nome_loja, email, data_cadastro, status_pagamento, data_expiracao FROM lojas');
     const lojasComDias = lojas.map((loja) => {
-      const dias = Math.floor((new Date() - new Date(loja.data_cadastro)) / (1000 * 60 * 60 * 24));
+      const dias = Math.floor((new Date(loja.data_expiracao) - new Date()) / (1000 * 60 * 60 * 24));
       return { ...loja, dias_desde_cadastro: dias };
     });
 
     res.json(lojasComDias);
   } catch (err) {
+    console.error(err)
     res.status(500).json({ msg: 'Erro ao buscar lojas' });
   }
 });
@@ -50,7 +51,14 @@ router.put('/ativar/:id', verificarAdmin, async (req, res) => {
   const { id } = req.params;
 
   try {
-    await db.query('UPDATE lojas SET status_pagamento = true WHERE id = ?', [id]);
+    const { rowCount } = await db.query(
+      'UPDATE lojas SET status_pagamento = true, data_expiracao = CURRENT_TIMESTAMP WHERE id = $1',
+      [id]
+    );
+
+    if (rowCount === 0) {
+      throw new Error('Nenhuma loja encontrada com o ID fornecido');
+    }
     res.json({ msg: 'Loja ativada com sucesso!' });
   } catch (err) {
     res.status(500).json({ msg: 'Erro ao ativar loja' });
@@ -63,7 +71,7 @@ router.put('/desativar/:id', verificarAdmin, async (req, res) => {
   const { id } = req.params;
 
   try {
-    await db.query('UPDATE lojas SET status_pagamento = false WHERE id = ?', [id]);
+    await db.query('UPDATE lojas SET status_pagamento = false WHERE id = $1', [id]);
     res.json({ msg: 'Loja desativada com sucesso!' });
   } catch (err) {
     res.status(500).json({ msg: 'Erro ao ativar loja' });
