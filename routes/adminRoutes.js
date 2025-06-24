@@ -52,7 +52,7 @@ router.put('/ativar/:id', verificarAdmin, async (req, res) => {
 
   try {
     const { rowCount } = await db.query(
-      'UPDATE lojas SET status_pagamento = true, data_expiracao = CURRENT_TIMESTAMP WHERE id = $1',
+      `UPDATE lojas SET status_pagamento = true, data_expiracao =  CURRENT_TIMESTAMP + INTERVAL '30 days' WHERE id = $1`,
       [id]
     );
 

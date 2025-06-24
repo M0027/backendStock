@@ -1,11 +1,11 @@
-const pool = require('../config/db.js');
+const pool = require('../config/db');
 
 class Produto {
   // Cria um novo produto (com cálculo automático do preço de venda)
   static async criar(nome, categoria_id, preco_compra, preco_venda, stock, loja_id) {
     try {
       // Verificar se a categoria existe e pertence à loja
-      const {rows: categorias} = await pool.query(
+      const { rows: categorias } = await pool.query(
         `SELECT id FROM categorias WHERE id = $1 AND loja_id = $2`,
         [categoria_id, loja_id]
       );
@@ -31,7 +31,7 @@ class Produto {
   // Remove um produto por ID
   static async deletar(id, loja_id) {
     try {
-      const {rows:result} = await pool.query('DELETE FROM produtos WHERE id = $1 AND loja_id = $2', [id, loja_id]);
+      const { rows: result } = await pool.query('DELETE FROM produtos WHERE id = $1 AND loja_id = $2', [id, loja_id]);
 
       if (result.affectedRows === 0) {
         throw new Error('Produto não encontrado.');
@@ -50,7 +50,7 @@ class Produto {
 
 
     try {
-      const {rows:result}= await pool.query(
+      const { rows: result } = await pool.query(
         `UPDATE produtos 
        SET stock = $1, preco_compra = $2
        WHERE id = $3 AND loja_id = $4`,
@@ -69,7 +69,7 @@ class Produto {
   // Lista todos os produtos com nome da categoria
   static async listar(loja_id) {
     try {
-      const {rows:rows} = await pool.query(`
+      const { rows: rows } = await pool.query(`
   SELECT p.*, c.nome AS categoria_nome 
   FROM produtos p
   JOIN categorias c ON p.categoria_id = c.id

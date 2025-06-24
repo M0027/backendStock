@@ -6,30 +6,30 @@ class Admin {
   // Cadastrar admin (com senha criptografada)
   static async cadastrar(nome, email, senha) {
     const senhaHash = await bcrypt.hash(senha, 10); // 10 = salt rounds
-    const [result] = await pool.query(
-      'INSERT INTO administradores (nome, email, senha_hash) VALUES (?, ?, ?)',
+    const {rows:result} = await pool.query(
+      'INSERT INTO administradores (nome, email, senha_hash) VALUES ($1, $2, $3)',
       [nome, email, senhaHash]
     );
-    return result.insertId;
+    return result[0].id;
   }
 
   // Login: verifica e-mail e senha, retorna token JWT
   static async login(email, senha) {
-    const [rows] = await pool.query('SELECT * FROM administradores WHERE email = ?', [email]);
-    const admin = rows[0];
+    const {rows: admin} = await pool.query('SELECT * FROM administradores WHERE email = $1', [email]);
+    const resul = admin[0];
 
-    if (!admin || !(await bcrypt.compare(senha, admin.senha_hash))) {
+    if (!resul || !(await bcrypt.compare(senha, resul.senha_hash))) {
       throw new Error('E-mail ou senha incorretos');
     }
 
     // Gera token JWT válido por 1h
     const token = jwt.sign(
-      { id: admin.id, email: admin.email },
+      { id: resul.id, email: resul.email },
       process.env.JWT_SECRET,
       { expiresIn: '1h' }
     );
 
-    return { token, admin: { id: admin.id, nome: admin.nome, email: admin.email } };
+    return { token, resul: { id: resul.id, nome: resul.nome, email: resul.email } };
   }
 }
 
